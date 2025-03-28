@@ -53,7 +53,7 @@ class PersChatService:
             StrOutputParser()
         ])
 
-    def _build_messages(self, user_input: str):
+    def build_messages(self, user_input: str):
         """LangChain 메시지 형식으로 시스템 + 히스토리 + 사용자 입력 구성"""
         messages = [{"role": "system", "content": self.few_shot_text}]
         for msg in self.history:

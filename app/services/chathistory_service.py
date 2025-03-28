@@ -14,7 +14,7 @@ class ChatHistoryService:
         with open(self.archive_file, "w", encoding="utf-8") as f:
             json.dump([], f, ensure_ascii=False, indent=2)
 
-    def save(self, user_input: str, bot_response: str):
+    def savechat(self, user_input: str, bot_response: str):
         with open(self.archive_file, "r+", encoding="utf-8") as f:
             archive = json.load(f)
             archive.append({
