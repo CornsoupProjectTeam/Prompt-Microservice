@@ -9,7 +9,7 @@ class ChatRequest(BaseModel):
     user_input: str
     bot_response: str
 
-@router.post("/savechat")
+@router.post("/")
 def save_chat(request: ChatRequest):
     history_service.save_chat(request.user_input, request.bot_response)
     return {"message": "대화가 저장되었습니다."}
