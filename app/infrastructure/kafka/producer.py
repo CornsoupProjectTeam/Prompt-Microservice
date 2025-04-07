@@ -28,3 +28,12 @@ class KafkaMessageProducer:
         self.producer.send("chat_output", value=message)
         self.producer.flush()  # 메시지를 즉시 전송
         logger.info(f"[{memberId}] chat_output 전송 완료: {message}")
+
+    def send_done_signal(self, memberId: str):
+        message = {
+            "type": "done",
+            "memberId": memberId
+        }
+        self.producer.send("chat_output", value=message)
+        self.producer.flush()
+        logger.info(f"[{memberId}] done 신호 전송 완료")
