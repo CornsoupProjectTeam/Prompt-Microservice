@@ -2,7 +2,6 @@
 
 import json
 import logging
-# from domain.prompt_generator import PersChatService
 from application.session_manager import SessionManager
 from infrastructure.kafka import create_consumer, KafkaMessageProducer
 
@@ -35,6 +34,7 @@ def ChatConsumer():
 
                 session = session_manager.get_or_create_session(memberId)
                 ai_response = session.generate_response(user_message)
+                reply, is_done = session.generate_response(user_message)
 
                 # 응답 전송
                 producer.send_chat_response(
@@ -42,6 +42,12 @@ def ChatConsumer():
                     message=ai_response,
                     timestamp=data.get("timestamp")
                 )
+
+                # 대화 종료 처리
+                if is_done:
+                    producer.send_done_signal(memberId)
+                    session_manager.remove_session(memberId)
+                    logger.info(f"대화 종료됨 (자동): {memberId}")
 
             # (2) 종료 메시지
             elif msg_type == "done":
