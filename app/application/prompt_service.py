@@ -14,6 +14,7 @@ class PersChatService:
         self.history.append(AIMessage(content=self.start_message))
 
     def generate_response(self, user_input: str) -> tuple[str, bool]:
+        logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
         """
         사용자 입력을 받아 응답을 생성하고,
         종료 조건이 충족되면 done 상태를 함께 반환합니다.
@@ -33,7 +34,7 @@ class PersChatService:
             ]
 
             # 마지막 응답 처리
-            if self.turn_count >= 5:
+            if self.turn_count >= 3:
                 final_reply = "아쉽지만 대화는 여기까지에요.."
                 self.history.append(AIMessage(content=final_reply))
                 return final_reply, True  # 종료 상태
