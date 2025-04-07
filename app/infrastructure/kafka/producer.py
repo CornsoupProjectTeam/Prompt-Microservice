@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 from kafka import KafkaProducer
 from infrastructure.kafka.consumer_config import get_kafka_broker
 
@@ -32,7 +33,8 @@ class KafkaMessageProducer:
     def send_done_signal(self, memberId: str):
         message = {
             "type": "done",
-            "memberId": memberId
+            "memberId": memberId,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
         }
         self.producer.send("chat_output", value=message)
         self.producer.flush()

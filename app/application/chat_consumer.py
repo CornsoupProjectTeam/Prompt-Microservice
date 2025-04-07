@@ -33,13 +33,12 @@ def ChatConsumer():
                     continue
 
                 session = session_manager.get_or_create_session(memberId)
-                ai_response = session.generate_response(user_message)
                 reply, is_done = session.generate_response(user_message)
 
                 # 응답 전송
                 producer.send_chat_response(
                     memberId=memberId,
-                    message=ai_response,
+                    message=reply,
                     timestamp=data.get("timestamp")
                 )
 
