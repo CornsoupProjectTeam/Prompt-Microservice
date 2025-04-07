@@ -9,6 +9,7 @@ class PersChatService:
         self.history = []
         self.history.append(AIMessage(content="안녕하세요! 오늘 기분은 어떠세요?"))
         self.generator = PromptGenerator()
+        self.history.append(AIMessage(content=self.start_message))
 
     def generate_response(self, user_input: str) -> str:
         try:

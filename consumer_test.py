@@ -1,16 +1,20 @@
-from kafka import KafkaConsumer
+# send_test.py
 import json
+from kafka import KafkaProducer
 
-consumer = KafkaConsumer(
-    "chat_output",
-    bootstrap_servers="210.110.103.135:9092",
-    value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-    auto_offset_reset="earliest",
-    enable_auto_commit=True,
-    group_id="test-output-group"
+producer = KafkaProducer(
+    bootstrap_servers="localhost:9092",
+    value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
-print("chat_output 수신 대기 중... (Ctrl+C로 종료)")
+test_message = {
+    "type": "chat",
+    "memberId": "test123",
+    "message": "안녕 챗봇!",
+    "timestamp": "2025-04-07T12:00:00Z"
+}
 
-for msg in consumer:
-    print("받은 메시지:", msg.value)
+producer.send("chat_input", value=test_message)
+producer.flush()
+
+print("✅ 테스트 메시지 전송 완료")

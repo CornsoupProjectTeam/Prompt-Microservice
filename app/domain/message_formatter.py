@@ -1,6 +1,6 @@
-def format_response(user_id, session_id, message):
+def format_response(memberId, session_id, message):
     return {
-        "user_id": user_id,
+        "memberId": memberId,
         "session_id": session_id,
         "message": message,
         "status": "responded"

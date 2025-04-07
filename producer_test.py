@@ -1,19 +1,16 @@
-from kafka import KafkaProducer
+# receive_test.py
 import json
-from datetime import datetime
+from kafka import KafkaConsumer
 
-producer = KafkaProducer(
-    bootstrap_servers="210.110.103.135:9092",
-    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-    key_serializer=lambda k: k.encode("utf-8")
+consumer = KafkaConsumer(
+    "chat_output",
+    bootstrap_servers="localhost:9092",
+    value_deserializer=lambda m: json.loads(m.decode("utf-8")),
+    group_id="test-cli-group",
+    auto_offset_reset="earliest",
+    enable_auto_commit=True
 )
 
-message = {
-    "type": "done",
-    "member_id": "u123",
-    "timestamp": "2025-03-30T14:36:00.000Z"
-}
-
-producer.send("chat_output", key=message["member_id"], value=message)
-producer.flush()
-print("chat_output 메시지 전송 완료")
+print("📡 chat_output 메시지 수신 대기 중...")
+for msg in consumer:
+    print("📩 받은 메시지:", msg.value)
