@@ -2,6 +2,8 @@
 
 import json
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from application.session_manager import SessionManager
 from infrastructure.kafka import create_consumer, KafkaMessageProducer
 
@@ -35,11 +37,14 @@ def ChatConsumer():
                 session = session_manager.get_or_create_session(memberId)
                 reply, is_done = session.generate_response(user_message)
 
+                # 현재 시간 생성
+                timestamp = datetime.now(ZoneInfo("Asia/Seoul")).isoformat()
+
                 # 응답 전송
                 producer.send_chat_response(
                     memberId=memberId,
                     message=reply,
-                    timestamp=data.get("timestamp")
+                    timestamp=timestamp
                 )
 
                 # 대화 종료 처리
