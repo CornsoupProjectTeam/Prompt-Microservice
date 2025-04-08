@@ -1,8 +1,9 @@
 #application/session_manager.py
 from typing import Dict
+import logging
 from application.prompt_service import PersChatService
 
-
+logger = logging.getLogger(__name__)
 
 class SessionManager:
     """
@@ -13,6 +14,7 @@ class SessionManager:
 
     def get_or_create_session(self, member_id: str):
         if member_id not in self.sessions:
+            logger.info(f"새로운 세션 생성: {member_id}")
             self.sessions[member_id] = PersChatService()
         return self.sessions[member_id]
 
