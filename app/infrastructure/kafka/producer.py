@@ -1,5 +1,7 @@
+#infrastructure/kafka/producer.py
 import json
 import logging
+from zoneinfo import ZoneInfo
 from datetime import datetime
 from kafka import KafkaProducer
 from infrastructure.kafka.consumer_config import get_kafka_broker
@@ -20,6 +22,8 @@ class KafkaMessageProducer:
         """
         Kafka에 chat_output 토픽으로 응답 메시지를 전송
         """
+        kst = ZoneInfo("Asia/Seoul")
+        timestamp = datetime.now(kst).isoformat()
         message = {
             "memberId": memberId,
             "message": message,
@@ -30,11 +34,13 @@ class KafkaMessageProducer:
         self.producer.flush()  # 메시지를 즉시 전송
         logger.info(f"[{memberId}] chat_output 전송 완료: {message}")
 
-    def send_done_signal(self, memberId: str):
+    def send_done_signal(self, memberId: str, timestamp: str):
+        kst = ZoneInfo("Asia/Seoul")
+        timestamp = datetime.now(kst).isoformat()
         message = {
             "type": "done",
             "memberId": memberId,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": timestamp
         }
         self.producer.send("chat_output", value=message)
         self.producer.flush()

@@ -1,3 +1,5 @@
+#application/prompt_service.py
+import re
 import logging
 from langchain_core.messages import HumanMessage, AIMessage
 from domain.prompt_generator import PromptGenerator
@@ -13,6 +15,28 @@ class PersChatService:
         self.start_message = "안녕하세요! 오늘 기분은 어떠세요?"
         self.history.append(AIMessage(content=self.start_message))
 
+    def clean_reply(self, text: str) -> str:
+            """
+            불필요한 접두어, 이스케이프 문자, 따옴표 등을 제거하여 정제된 답변 반환
+            """
+            text = text.strip()  # 양 끝 공백 제거
+            text = re.sub(r'^["\']?|["\']?$', '', text)  # 양쪽 따옴표 제거
+            text = re.sub(r'^(AI|Assistant|챗봇)\s*:\s*', '', text, flags=re.IGNORECASE)  # AI: 제거
+            text = text.replace("\\n", "\n").replace("\n\n", "\n").replace("\\", "")  # \n, \\ 제거
+            emoji_pattern = re.compile(
+                "["
+                "\U0001F600-\U0001F64F"  # 감정 이모지
+                "\U0001F300-\U0001F5FF"  # 기호 & 물체
+                "\U0001F680-\U0001F6FF"  # 교통 & 기계
+                "\U0001F1E0-\U0001F1FF"  # 국기
+                "\U00002700-\U000027BF"  # 기호
+                "\U000024C2-\U0001F251"
+                "]+",
+                flags=re.UNICODE
+            )
+            text = emoji_pattern.sub(r'', text)
+            return text.strip()
+
     def generate_response(self, user_input: str) -> tuple[str, bool]:
         logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
         """
@@ -25,6 +49,7 @@ class PersChatService:
         """
         try:
             self.turn_count += 1
+            logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
             self.history.append(HumanMessage(content=user_input))
 
             # 메시지 포맷 구성
@@ -40,7 +65,8 @@ class PersChatService:
                 return final_reply, True  # 종료 상태
 
             # 일반 응답 처리
-            reply = self.generator.generate_reply(formatted_history)
+            raw_reply = self.generator.generate_reply(formatted_history)
+            reply = self.clean_reply(raw_reply)
             self.history.append(AIMessage(content=reply))
             return reply, False
 
