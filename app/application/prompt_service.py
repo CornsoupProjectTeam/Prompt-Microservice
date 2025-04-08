@@ -22,17 +22,18 @@ class PersChatService:
             text = text.strip()  # 양 끝 공백 제거
             text = re.sub(r'^["\']?|["\']?$', '', text)  # 양쪽 따옴표 제거
             text = re.sub(r'^(AI|Assistant|챗봇)\s*:\s*', '', text, flags=re.IGNORECASE)  # AI: 제거
-            text = text.replace("\\n", "\n").replace("\n\n", "\n").replace("\\", "")  # \n, \\ 제거
+            text = re.sub(r'[\n\r\t]+', ' ', text)
+            text = text.replace("\\", "")
+
+            # ✅ 이모지 제거
             emoji_pattern = re.compile(
-                "["
-                "\U0001F600-\U0001F64F"  # 감정 이모지
-                "\U0001F300-\U0001F5FF"  # 기호 & 물체
-                "\U0001F680-\U0001F6FF"  # 교통 & 기계
-                "\U0001F1E0-\U0001F1FF"  # 국기
-                "\U00002700-\U000027BF"  # 기호
+                "[" "\U0001F600-\U0001F64F"
+                "\U0001F300-\U0001F5FF"
+                "\U0001F680-\U0001F6FF"
+                "\U0001F1E0-\U0001F1FF"
+                "\U00002700-\U000027BF"
                 "\U000024C2-\U0001F251"
-                "]+",
-                flags=re.UNICODE
+                "]+", flags=re.UNICODE
             )
             text = emoji_pattern.sub(r'', text)
             return text.strip()
