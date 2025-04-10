@@ -1,34 +1,12 @@
-#main.py
+# main.py
 import logging
 import json
 from kafka import KafkaConsumer
-from langchain_core.messages import HumanMessage, AIMessage
-
-from domain.prompt_generator import PromptGenerator
+from application.prompt_service import PersChatService
 from infrastructure.kafka.producer import KafkaMessageProducer
 from infrastructure.config import get_env
 
-
-class PersChatService:
-    def __init__(self):
-        self.history = []
-        self.generator = PromptGenerator()
-        self.start_message = "안녕하세요! 오늘 기분은 어떠세요?"
-        self.history.append(AIMessage(content=self.start_message))
-
-    def generate_response(self, user_input: str) -> str:
-        self.history.append(HumanMessage(content=user_input))
-
-        formatted_history = [
-            {"role": "user" if isinstance(msg, HumanMessage) else "assistant", "content": msg.content}
-            for msg in self.history
-        ]
-
-        reply = self.generator.generate_reply(formatted_history)
-        self.history.append(AIMessage(content=reply))
-        return reply
-
-
+# ✅ 안전하게 JSON 디코딩
 def safe_json_loads(v):
     if v:
         try:
@@ -38,7 +16,7 @@ def safe_json_loads(v):
             return None
     return None
 
-
+# ✅ Kafka Consumer 생성
 def create_consumer(topic: str, bootstrap_servers: str) -> KafkaConsumer:
     return KafkaConsumer(
         topic,
@@ -49,13 +27,12 @@ def create_consumer(topic: str, bootstrap_servers: str) -> KafkaConsumer:
         value_deserializer=lambda v: safe_json_loads(v)
     )
 
-
+# ✅ 메시지 소비 및 처리
 def consume_messages(consumer: KafkaConsumer, chat_service: PersChatService, producer: KafkaMessageProducer):
     logging.info("Kafka Consumer 대기 중...")
 
     for message in consumer:
         data = message.value
-
         if not data:
             logging.warning("빈 메시지 수신 - 무시")
             continue
@@ -68,23 +45,30 @@ def consume_messages(consumer: KafkaConsumer, chat_service: PersChatService, pro
         try:
             if msg_type == "chat" and user_input.strip():
                 logging.info(f"[{user_id}] 사용자 입력 수신: {user_input}")
-                reply = chat_service.generate_response(user_input)
 
-                # Kafka에 응답 발행
+                # ✅ 응답 및 종료 여부 반환
+                reply, is_done = chat_service.generate_response(user_input)
+
+                # ✅ Kafka에 응답 전송
                 producer.send_chat_response(
                     memberId=user_id,
                     message=reply,
                     timestamp=timestamp
                 )
 
+                # ✅ 대화 종료 시 done 발행
+                if is_done:
+                    producer.send_done_signal(user_id, timestamp)
+                    logging.info(f"[{user_id}] chat_done 전송 완료")
+
             elif msg_type == "done":
                 logging.info(f"[{user_id}] 세션 종료 요청 수신")
-                # 세션 초기화 등 처리 가능
+                # TODO: 필요한 세션 정리 로직이 있다면 여기에 작성
 
         except Exception as e:
             logging.error(f"[{user_id}] 처리 중 오류: {e}")
 
-
+# ✅ 진입점
 def main():
     logging.basicConfig(level=logging.INFO)
 
@@ -95,9 +79,8 @@ def main():
     producer = KafkaMessageProducer()
     chat_service = PersChatService()
 
-    logging.info("Prompt-Microservice 시작됨")
+    logging.info("✅ Prompt-Microservice 시작됨")
     consume_messages(consumer, chat_service, producer)
-
 
 if __name__ == "__main__":
     main()
