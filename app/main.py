@@ -37,36 +37,36 @@ def consume_messages(consumer: KafkaConsumer, chat_service: PersChatService, pro
             logging.warning("빈 메시지 수신 - 무시")
             continue
 
-        user_id = data.get("memberId", "unknown")
+        memberId = data.get("memberId", "unknown")
         msg_type = data.get("type")
-        user_input = data.get("message", "")
+        user_message = data.get("message", "")
         timestamp = data.get("timestamp")
 
         try:
-            if msg_type == "chat" and user_input.strip():
-                logging.info(f"[{user_id}] 사용자 입력 수신: {user_input}")
+            if msg_type == "chat" and user_message.strip():
+                logging.info(f"[{memberId}] 사용자 입력 수신: {user_message}")
 
                 # ✅ 응답 및 종료 여부 반환
-                reply, is_done = chat_service.generate_response(user_input)
+                reply, is_done = chat_service.generate_response(user_message)
 
                 # ✅ Kafka에 응답 전송
                 producer.send_chat_response(
-                    memberId=user_id,
+                    memberId=memberId,
                     message=reply,
                     timestamp=timestamp
                 )
 
                 # ✅ 대화 종료 시 done 발행
                 if is_done:
-                    producer.send_done_signal(user_id, timestamp)
-                    logging.info(f"[{user_id}] chat_done 전송 완료")
+                    producer.send_done_signal(memberId, timestamp)
+                    logging.info(f"[{memberId}] chat_done 전송 완료")
 
             elif msg_type == "done":
-                logging.info(f"[{user_id}] 세션 종료 요청 수신")
+                logging.info(f"[{memberId}] 세션 종료 요청 수신")
                 # TODO: 필요한 세션 정리 로직이 있다면 여기에 작성
 
         except Exception as e:
-            logging.error(f"[{user_id}] 처리 중 오류: {e}")
+            logging.error(f"[{memberId}] 처리 중 오류: {e}")
 
 # ✅ 진입점
 def main():
