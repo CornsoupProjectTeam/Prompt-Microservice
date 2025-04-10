@@ -45,6 +45,8 @@ class PersChatService:
 
     def generate_response(self, user_input: str) -> str:
         logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
+        raw_reply = self.generator.generate_reply(formatted_history)
+        logger.info(f"🧪 raw_reply: {repr(raw_reply)}")
         """
         사용자 입력을 받아 응답을 생성하고,
         종료 조건이 충족되면 done 상태를 함께 반환합니다.
