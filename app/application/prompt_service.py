@@ -38,7 +38,8 @@ class PersChatService:
             text = emoji_pattern.sub(r'', text)
             return text.strip()
 
-    def generate_response(self, user_input: str) -> tuple[str, bool]:
+
+    def generate_response(self, user_input: str) -> str:
         logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
         """
         사용자 입력을 받아 응답을 생성하고,
