@@ -11,7 +11,6 @@ class PersChatService:
         self.history = []
         self.turn_count = 0
         self.generator = PromptGenerator()
-
         self.start_message = "안녕하세요! 오늘 기분은 어떠세요?"
         self.history.append(AIMessage(content=self.start_message))
 
