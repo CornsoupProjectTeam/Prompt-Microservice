@@ -2,31 +2,10 @@
 import logging
 import json
 from kafka import KafkaConsumer
-from langchain_core.messages import HumanMessage, AIMessage
-
-from domain.prompt_generator import PromptGenerator
+from application.prompt_service import PersChatService
 from infrastructure.kafka.producer import KafkaMessageProducer
 from infrastructure.config import get_env
 
-
-class PersChatService:
-    def __init__(self):
-        self.history = []
-        self.generator = PromptGenerator()
-        self.start_message = "안녕하세요! 오늘 기분은 어떠세요?"
-        self.history.append(AIMessage(content=self.start_message))
-
-    def generate_response(self, user_input: str) -> str:
-        self.history.append(HumanMessage(content=user_input))
-
-        formatted_history = [
-            {"role": "user" if isinstance(msg, HumanMessage) else "assistant", "content": msg.content}
-            for msg in self.history
-        ]
-
-        reply = self.generator.generate_reply(formatted_history)
-        self.history.append(AIMessage(content=reply))
-        return reply
 
 
 def safe_json_loads(v):
@@ -43,7 +22,7 @@ def create_consumer(topic: str, bootstrap_servers: str) -> KafkaConsumer:
     return KafkaConsumer(
         topic,
         bootstrap_servers=bootstrap_servers,
-        group_id=get_env("KAFKA_CONSUMER_GROUP", "prompt-consumer-group"),
+        group_id=get_env("KAFKA_CONSUMER_GROUP", "prompt-microservice"),
         auto_offset_reset="latest",
         enable_auto_commit=True,
         value_deserializer=lambda v: safe_json_loads(v)
