@@ -132,7 +132,7 @@ def consume_messages(consumer: KafkaConsumer, chat_service: PersChatService, pro
         try:
             if msg_type == "chat" and user_input.strip():
                 logging.info(f"[{user_id}] 사용자 입력 수신: {user_input}")
-                reply = chat_service.generate_response(user_input)
+                reply, is_done = chat_service.generate_response(user_input)
 
                 # Kafka에 응답 발행
                 producer.send_chat_response(
@@ -141,9 +141,8 @@ def consume_messages(consumer: KafkaConsumer, chat_service: PersChatService, pro
                     timestamp=timestamp
                 )
 
-            elif msg_type == "done":
-                logging.info(f"[{user_id}] 세션 종료 요청 수신")
-                # 세션 초기화 등 처리 가능
+            if is_done:
+                producer.send_done_signal(user_id)
 
         except Exception as e:
             logging.error(f"[{user_id}] 처리 중 오류: {e}")
