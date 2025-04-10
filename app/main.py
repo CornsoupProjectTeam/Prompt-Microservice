@@ -28,25 +28,12 @@ class PersChatService:
             text = re.sub(r'^(AI|Assistant|챗봇)\s*:\s*', '', text, flags=re.IGNORECASE)  # AI: 제거
             text = re.sub(r'[\n\r\t]+', ' ', text)
             text = text.replace("\\", "")
-
-            # ✅ 이모지 제거
-            emoji_pattern = re.compile(
-                "[" "\U0001F600-\U0001F64F"
-                "\U0001F300-\U0001F5FF"
-                "\U0001F680-\U0001F6FF"
-                "\U0001F1E0-\U0001F1FF"
-                "\U00002700-\U000027BF"
-                "\U000024C2-\U0001F251"
-                "]+", flags=re.UNICODE
-            )
-            text = emoji_pattern.sub(r'', text)
+            
             return text.strip()
 
 
     def generate_response(self, user_input: str) -> str:
         logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
-        raw_reply = self.generator.generate_reply(formatted_history)
-        logger.info(f"🧪 raw_reply: {repr(raw_reply)}")
         """
         사용자 입력을 받아 응답을 생성하고,
         종료 조건이 충족되면 done 상태를 함께 반환합니다.
