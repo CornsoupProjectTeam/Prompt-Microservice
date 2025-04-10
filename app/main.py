@@ -2,9 +2,12 @@
 import logging
 import json
 from kafka import KafkaConsumer
+from langchain_core.messages import HumanMessage, AIMessage
 from application.prompt_service import PersChatService
+from domain.prompt_generator import PromptGenerator
 from infrastructure.kafka.producer import KafkaMessageProducer
 from infrastructure.config import get_env
+
 
 
 
@@ -22,7 +25,7 @@ def create_consumer(topic: str, bootstrap_servers: str) -> KafkaConsumer:
     return KafkaConsumer(
         topic,
         bootstrap_servers=bootstrap_servers,
-        group_id=get_env("KAFKA_CONSUMER_GROUP", "prompt-microservice"),
+        group_id=get_env("KAFKA_CONSUMER_GROUP", "prompt-consumer-group"),
         auto_offset_reset="latest",
         enable_auto_commit=True,
         value_deserializer=lambda v: safe_json_loads(v)
