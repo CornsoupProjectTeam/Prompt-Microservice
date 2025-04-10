@@ -54,7 +54,7 @@ class PersChatService:
             ]
 
             # 마지막 응답 처리
-            if self.turn_count >= 3:
+            if self.turn_count >= 10:
                 final_reply = "아쉽지만 대화는 여기까지에요.."
                 self.history.append(AIMessage(content=final_reply))
                 return final_reply, True  # 종료 상태
