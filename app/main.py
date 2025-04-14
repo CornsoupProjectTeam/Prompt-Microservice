@@ -15,7 +15,6 @@ class PersChatService:
     def __init__(self):
         self.histories = defaultdict(list)       # memberId별 대화 히스토리
         self.turn_counts = defaultdict(int)
-        self.turn_count = 0
         self.generator = PromptGenerator()
         self.start_message = "안녕하세요! 오늘 기분은 어떠세요?"
 
@@ -48,8 +47,9 @@ class PersChatService:
             ]
 
             if turn >= 20:
-                final_reply = "아쉽지만 대화는 여기까지에요.."
+                final_reply = "아쉽지만 대화는 여기까지에요.. 오늘 함께한 이야기 감사합니다."
                 self.histories[member_id].append(AIMessage(content=final_reply))
+                logger.info(f"[{member_id}] 대화 종료 응답 반환됨")
                 return final_reply, True
 
             try:
