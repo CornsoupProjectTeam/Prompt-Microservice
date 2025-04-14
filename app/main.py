@@ -54,7 +54,6 @@ class PersChatService:
 
             try:
                 raw_reply = self.generator.generate_reply(formatted_history)
-                logger.info(f"[{member_id}] LLM raw reply: {raw_reply}")
 
                 reply = self.clean_reply(raw_reply)
                 self.histories[member_id].append(AIMessage(content=reply))
