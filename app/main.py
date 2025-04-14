@@ -4,7 +4,7 @@ import json
 import re
 from kafka import KafkaConsumer
 from langchain_core.messages import HumanMessage, AIMessage
-
+from collections import defaultdict
 from domain.prompt_generator import PromptGenerator
 from infrastructure.kafka.producer import KafkaMessageProducer
 from infrastructure.config import get_env
@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 class PersChatService:
     def __init__(self):
-        self.history = []
+        self.histories = defaultdict(list)       # memberId별 대화 히스토리
+        self.turn_counts = defaultdict(int)
         self.turn_count = 0
         self.generator = PromptGenerator()
         self.start_message = "안녕하세요! 오늘 기분은 어떠세요?"
@@ -31,55 +32,75 @@ class PersChatService:
             
             return text.strip()
 
+    def generate_response(self, member_id: str, user_input: str) -> tuple[str, bool]:
+            self.turn_counts[member_id] += 1
+            turn = self.turn_counts[member_id]
+            logger.info(f"[{member_id} / turn {turn}] 사용자 입력 수신됨: {user_input}")
 
-    def generate_response(self, user_input: str) -> str:
-        logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
-        """
-        사용자 입력을 받아 응답을 생성하고,
-        종료 조건이 충족되면 done 상태를 함께 반환합니다.
+            # history 초기화 및 시작 메시지 세팅
+            if turn == 1:
+                self.histories[member_id].append(AIMessage(content=self.start_message))
 
-        Returns:
-            - reply: 챗봇 응답
-            - is_done: 대화 종료 여부 (True면 done 발행 필요)
-        """
-        try:
-            self.turn_count += 1
-            logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
-            self.history.append(HumanMessage(content=user_input))
+            self.histories[member_id].append(HumanMessage(content=user_input))
 
-            # 메시지 포맷 구성
             formatted_history = [
                 {"role": "user" if isinstance(msg, HumanMessage) else "assistant", "content": msg.content}
-                for msg in self.history
+                for msg in self.histories[member_id]
             ]
 
-            # 마지막 응답 처리
-            if self.turn_count >= 20:
+            if turn >= 3:
                 final_reply = "아쉽지만 대화는 여기까지에요.."
-                self.history.append(AIMessage(content=final_reply))
-                return final_reply, True  # 종료 상태
+                self.histories[member_id].append(AIMessage(content=final_reply))
+                return final_reply, True
 
-            # 일반 응답 처리
-            raw_reply = self.generator.generate_reply(formatted_history)
-            reply = self.clean_reply(raw_reply)
-            self.history.append(AIMessage(content=reply))
-            return reply, False
+            try:
+                raw_reply = self.generator.generate_reply(formatted_history)
+                logger.info(f"[{member_id}] LLM raw reply: {raw_reply}")
 
-        except Exception as e:
-            logger.error(f"응답 생성 실패: {e}")
-            return "챗봇 응답 생성 중 오류가 발생했어요.", False
+                reply = self.clean_reply(raw_reply)
+                self.histories[member_id].append(AIMessage(content=reply))
+                return reply, False
+
+            except Exception as e:
+                logger.error(f"[{member_id}] 응답 생성 실패: {e}")
+                return "챗봇 응답 생성 중 오류가 발생했어요.", False
 
     # def generate_response(self, user_input: str) -> str:
-    #     self.history.append(HumanMessage(content=user_input))
+    #     logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
+    #     """
+    #     사용자 입력을 받아 응답을 생성하고,
+    #     종료 조건이 충족되면 done 상태를 함께 반환합니다.
 
-    #     formatted_history = [
-    #         {"role": "user" if isinstance(msg, HumanMessage) else "assistant", "content": msg.content}
-    #         for msg in self.history
-    #     ]
+    #     Returns:
+    #         - reply: 챗봇 응답
+    #         - is_done: 대화 종료 여부 (True면 done 발행 필요)
+    #     """
+    #     try:
+    #         self.turn_count += 1
+    #         logger.info(f"[{self.turn_count}] 사용자 입력 수신됨: {user_input}")
+    #         self.history.append(HumanMessage(content=user_input))
 
-    #     reply = self.generator.generate_reply(formatted_history)
-    #     self.history.append(AIMessage(content=reply))
-    #     return reply
+    #         # 메시지 포맷 구성
+    #         formatted_history = [
+    #             {"role": "user" if isinstance(msg, HumanMessage) else "assistant", "content": msg.content}
+    #             for msg in self.history
+    #         ]
+
+    #         # 마지막 응답 처리
+    #         if self.turn_count >= 3:
+    #             final_reply = "아쉽지만 대화는 여기까지에요.."
+    #             self.history.append(AIMessage(content=final_reply))
+    #             return final_reply, True  # 종료 상태
+
+    #         # 일반 응답 처리
+    #         raw_reply = self.generator.generate_reply(formatted_history)
+    #         reply = self.clean_reply(raw_reply)
+    #         self.history.append(AIMessage(content=reply))
+    #         return reply, False
+
+    #     except Exception as e:
+    #         logger.error(f"응답 생성 실패: {e}")
+    #         return "챗봇 응답 생성 중 오류가 발생했어요.", False
 
 
 def safe_json_loads(v):
@@ -121,7 +142,7 @@ def consume_messages(consumer: KafkaConsumer, chat_service: PersChatService, pro
         try:
             if msg_type == "chat" and user_input.strip():
                 logging.info(f"[{user_id}] 사용자 입력 수신: {user_input}")
-                reply, is_done = chat_service.generate_response(user_input)
+                reply, is_done = chat_service.generate_response(member_id=user_id, user_input=user_input)
 
                 # Kafka에 응답 발행
                 producer.send_chat_response(
