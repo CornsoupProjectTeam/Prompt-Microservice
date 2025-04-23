@@ -46,7 +46,7 @@ class PersChatService:
                 for msg in self.histories[member_id]
             ]
 
-            if turn >= 20:
+            if turn >= 10:
                 final_reply = "아쉽지만 대화는 여기까지에요.. 오늘 함께한 이야기 감사합니다."
                 self.histories[member_id].append(AIMessage(content=final_reply))
                 logger.info(f"[{member_id}] 대화 종료 응답 반환됨")
