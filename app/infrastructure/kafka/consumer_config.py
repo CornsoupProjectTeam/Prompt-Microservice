@@ -1,3 +1,4 @@
+#infrastructure/kafka/consumer_config.py
 import os
 from dotenv import load_dotenv
 from kafka import KafkaConsumer

@@ -1,25 +1,17 @@
-#application/session_manager.py
-from typing import Dict
-import logging
-from application.prompt_service import PersChatService
+# application/session_manager.py
 
-logger = logging.getLogger(__name__)
+from typing import Dict
+from domain.prompt.pers_chat_service import PersChatService
 
 class SessionManager:
-    """
-    member_id 기준으로 PersChatService 인스턴스를 관리하는 세션 관리자.
-    """
     def __init__(self):
         self.sessions: Dict[str, PersChatService] = {}
 
-    def get_or_create_session(self, member_id: str):
-        if member_id not in self.sessions:
-            logger.info(f"새로운 세션 생성: {member_id}")
-            self.sessions[member_id] = PersChatService()
-        return self.sessions[member_id]
+    def get_or_create_session(self, memberId: str):
+        if memberId not in self.sessions:
+            self.sessions[memberId] = PersChatService(memberId)
+        return self.sessions[memberId]
 
-    def remove_session(self, member_id: str):
-        if member_id in self.sessions:
-            del self.sessions[member_id]
-
- 
+    def remove_session(self, memberId: str):
+        if memberId in self.sessions:
+            del self.sessions[memberId]

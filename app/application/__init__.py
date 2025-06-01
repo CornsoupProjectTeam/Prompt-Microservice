@@ -1,3 +1,3 @@
 from .chat_consumer import ChatConsumer
-from .prompt_service import PersChatService
+from .auxiliary_prompt_service import AuxiliaryPromptService
 from .session_manager import SessionManager

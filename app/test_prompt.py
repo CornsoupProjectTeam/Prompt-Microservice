@@ -1,4 +1,4 @@
-from domain.prompt_generator import PromptGenerator
+from app.domain.prompt.prompt_generator import PromptGenerator
 from langchain_core.messages import HumanMessage, AIMessage
 
 class PersChatService:

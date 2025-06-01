@@ -1,7 +1,8 @@
-def format_response(memberId, session_id, message):
+# domain/message_formatter.py
+
+def format_response(memberId, message):
     return {
         "memberId": memberId,
-        "session_id": session_id,
         "message": message,
         "status": "responded"
     }
