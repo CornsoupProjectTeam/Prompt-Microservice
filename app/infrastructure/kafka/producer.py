@@ -1,8 +1,7 @@
-#infrastructure/kafka/producer.py
 import json
 import logging
-from zoneinfo import ZoneInfo
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from kafka import KafkaProducer
 from infrastructure.kafka.consumer_config import get_kafka_broker
 
@@ -15,33 +14,39 @@ class KafkaMessageProducer:
     def _create_producer(self) -> KafkaProducer:
         return KafkaProducer(
             bootstrap_servers=get_kafka_broker(),
+            key_serializer=lambda k: k.encode("utf-8"),
             value_serializer=lambda v: json.dumps(v).encode("utf-8")
         )
 
     def send_chat_response(self, memberId: str, message: str, timestamp: str):
-        """
-        Kafka에 chat_output 토픽으로 응답 메시지를 전송
-        """
-        kst = ZoneInfo("Asia/Seoul")
-        timestamp = datetime.now(kst).isoformat()
-        message = {
+        msg = {
             "memberId": memberId,
             "message": message,
             "timestamp": timestamp
         }
-
-        self.producer.send("chat_output", value=message)
-        self.producer.flush()  # 메시지를 즉시 전송
-        logger.info(f"[{memberId}] chat_output 전송 완료: {message}")
+        self.producer.send("chat_output", key=memberId.encode("utf-8"), value=msg)
+        self.producer.flush()
+        logger.info(f"[{memberId}] chat_output 전송 완료: {msg}")
 
     def send_done_signal(self, memberId: str):
-        kst = ZoneInfo("Asia/Seoul")
-        timestamp = datetime.now(kst).isoformat()
-        message = {
+        timestamp = datetime.now(ZoneInfo("Asia/Seoul")).isoformat()
+        done_msg = {
             "type": "done",
             "memberId": memberId,
             "timestamp": timestamp
         }
-        self.producer.send("chat_output", value=message)
+        self.producer.send("chat_output", key=memberId.encode("utf-8"), value=done_msg)
+        self.producer.send("chat_score", key=memberId.encode("utf-8"), value=done_msg)
         self.producer.flush()
-        logger.info(f"[{memberId}] done 신호 전송 완료")
+        logger.info(f"[{memberId}] done 메시지 전송 완료 (chat_output + chat_score)")
+
+    def send_score_request(self, memberId: str):
+        timestamp = datetime.now(ZoneInfo("Asia/Seoul")).isoformat()
+        request_msg = {
+            "type": "request_score",
+            "memberId": memberId,
+            "timestamp": timestamp
+        }
+        self.producer.send("chat_score", key=memberId.encode("utf-8"), value=request_msg)
+        self.producer.flush()
+        logger.info(f"[{memberId}] chat_score 요청 전송 완료 (request_score): {request_msg}")
