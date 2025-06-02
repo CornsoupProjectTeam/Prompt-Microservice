@@ -28,6 +28,7 @@ class KafkaMessageProducer:
 
     def send_chat_response(self, memberId: str, message: str, timestamp: str):
         msg = {
+            "type": "chat",
             "memberId": memberId,
             "message": message,
             "timestamp": timestamp
