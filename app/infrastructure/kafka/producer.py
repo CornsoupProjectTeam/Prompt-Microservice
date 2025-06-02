@@ -24,7 +24,7 @@ class KafkaMessageProducer:
             "message": message,
             "timestamp": timestamp
         }
-        self.producer.send("chat_output", key=memberId.encode("utf-8"), value=msg)
+        self.producer.send("chat_output", key=self._ensure_bytes(memberId), value=msg)
         self.producer.flush()
         logger.info(f"[{memberId}] chat_output 전송 완료: {msg}")
 
@@ -35,8 +35,8 @@ class KafkaMessageProducer:
             "memberId": memberId,
             "timestamp": timestamp
         }
-        self.producer.send("chat_output", key=memberId.encode("utf-8"), value=done_msg)
-        self.producer.send("chat_score", key=memberId.encode("utf-8"), value=done_msg)
+        self.producer.send("chat_output", key=self._ensure_bytes(memberId), value=done_msg)
+        self.producer.send("chat_score", key=self._ensure_bytes(memberId), value=done_msg)
         self.producer.flush()
         logger.info(f"[{memberId}] done 메시지 전송 완료 (chat_output + chat_score)")
 
@@ -47,6 +47,6 @@ class KafkaMessageProducer:
             "memberId": memberId,
             "timestamp": timestamp
         }
-        self.producer.send("chat_score", key=memberId.encode("utf-8"), value=request_msg)
+        self.producer.send("chat_score", key=self._ensure_bytes(memberId), value=request_msg)
         self.producer.flush()
         logger.info(f"[{memberId}] chat_score 요청 전송 완료 (request_score): {request_msg}")
