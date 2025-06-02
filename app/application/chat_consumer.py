@@ -1,3 +1,4 @@
+#chat_consumer.py
 import json
 import logging
 from datetime import datetime
