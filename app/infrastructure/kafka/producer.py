@@ -14,9 +14,17 @@ class KafkaMessageProducer:
     def _create_producer(self) -> KafkaProducer:
         return KafkaProducer(
             bootstrap_servers=get_kafka_broker(),
-            key_serializer=lambda k: k.encode("utf-8"),
+            key_serializer=lambda k: k.encode("utf-8") if isinstance(k, str) else k,
             value_serializer=lambda v: json.dumps(v).encode("utf-8")
         )
+
+    def _ensure_bytes(self, key):
+        if isinstance(key, bytes):
+            return key
+        elif isinstance(key, str):
+            return key.encode("utf-8")
+        else:
+            raise TypeError(f"Kafka key must be str or bytes, got {type(key)}")
 
     def send_chat_response(self, memberId: str, message: str, timestamp: str):
         msg = {
