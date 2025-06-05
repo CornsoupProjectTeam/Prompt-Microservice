@@ -40,6 +40,11 @@ class MonitorService:
                 self.turn_counts[memberId] += 1
                 turn = self.turn_counts[memberId]
 
+                logger.info(f"[{memberId}] 현재 턴: {turn}")
+                logger.info(f"[{memberId}] 수집된 점수: {self.scores[memberId]}")
+                logger.info(f"[{memberId}] 누락된 성향: {self.get_missing_traits(memberId)}")
+                logger.info(f"[{memberId}] all_traits_present 결과: {self.all_traits_present(memberId)}")
+
                 # ✅ 조기 종료 또는 보조 질문
                 if turn in self.check_turns:
                     if self.all_traits_present(memberId):
