@@ -34,8 +34,8 @@ class PromptGenerator:
 
         # Ollama LLM 설정
         self.llm = OllamaLLM(
-            base_url=os.getenv("OLLAMA_URL", "http://210.110.103.64:11434"),
-            model=os.getenv("OLLAMA_MODEL", "cornsoup_9b")
+            base_url="http://210.110.103.64:11434",  # ← 직접 입력
+            model="cornsoup_9b" 
         )
         self.chain = (
             RunnableLambda(self._build_messages)

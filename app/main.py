@@ -5,8 +5,8 @@ import logging
 from multiprocessing import Process
 from dotenv import load_dotenv
 
-# .env 파일 명시적 로딩 (main.py 기준 상대경로로 루트에 있다고 가정)
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../.env"))
+# .env 파일 명시적 로딩
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
 from app.application.chat_consumer import ChatConsumer
 from app.application.monitor_service import MonitorService
