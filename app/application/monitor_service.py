@@ -61,7 +61,8 @@ class MonitorService:
                     else:
                         missing = self.get_missing_traits(memberId)
                         if missing:
-                            support_q = self.prompt_generator.generate_support_reply(missing[0])
+                            prompt_service = AuxiliaryPromptService(memberId)
+                            support_q = prompt_service.generate_support_question(missing[0])
                             logger.info(f"[{memberId}] 보조 질문 내용: {support_q}")
                             cleaned = self.prompt_generator.clean_reply(support_q)
                             self.kafka_producer.send_chat_response(memberId, cleaned, timestamp)
