@@ -34,7 +34,7 @@ class PromptGenerator:
 
         # Ollama LLM 설정
         self.llm = OllamaLLM(
-            base_url="http://210.110.103.64:11434",  # ← 직접 입력
+            base_url="http://210.110.103.64:11434", 
             model="cornsoup_9b" 
         )
         self.chain = (
@@ -76,6 +76,7 @@ class PromptGenerator:
         text = re.sub(r'^["\']?|["\']?$', '', text)
         text = re.sub(r'^(AI|Assistant|챗봇)\s*:\s*', '', text, flags=re.IGNORECASE)
         text = re.sub(r'[\n\r\t]+', ' ', text)
+        text = text.replace("<eot_id>", "")
         text = text.replace("\\", "")
 
         analysis_patterns = [

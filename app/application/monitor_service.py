@@ -21,7 +21,7 @@ class MonitorService:
         self.required_traits = [
             "성실성", "친화성", "경험에 대한 개방성", "외향성", "신경증"
         ]
-        self.check_turns = {3, 6, 9, 12, 15, 18}
+        self.check_turns = {2, 3, 4, 5, 6}
 
     def listen_for_scores(self):
         logger.info("MonitorService 시작 (chat_score 구독 중)")
@@ -59,13 +59,14 @@ class MonitorService:
                         missing = self.get_missing_traits(memberId)
                         if missing:
                             support_q = self.prompt_generator.generate_support_reply(missing[0])
+                            logger.info(f"[{memberId}] 보조 질문 내용: {support_q}")
                             cleaned = self.prompt_generator.clean_reply(support_q)
                             self.kafka_producer.send_chat_response(memberId, cleaned)
                             logger.info(f"[{memberId}] 보조 질문 전송: {missing[0]}")
                         continue
 
                 # ✅ 20턴 도달 시 직접 질문 or 종료
-                if turn >= 20:
+                if turn >= 7:
                     if self.all_traits_present(memberId):
                         final_msg = "아쉽지만 대화는 여기까지에요."
                         cleaned = self.prompt_generator.clean_reply(final_msg)
