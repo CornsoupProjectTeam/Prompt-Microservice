@@ -7,6 +7,9 @@ from infrastructure.kafka.consumer_config import create_consumer
 from infrastructure.kafka.producer import KafkaMessageProducer
 from domain.prompt.prompt_generator import PromptGenerator
 from application.auxiliary_prompt_service import AuxiliaryPromptService
+from datetime import datetime
+from zoneinfo import ZoneInfo
+timestamp = datetime.now(ZoneInfo("Asia/Seoul")).isoformat()
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +53,7 @@ class MonitorService:
                     if self.all_traits_present(memberId):
                         final_msg = "아쉽지만 대화는 여기까지에요."
                         cleaned = self.prompt_generator.clean_reply(final_msg)
-                        self.kafka_producer.send_chat_response(memberId, cleaned)
+                        self.kafka_producer.send_chat_response(memberId, cleaned, timestamp)
                         self.kafka_producer.send_done_signal(memberId)
                         logger.info(f"[{memberId}] (조기 종료) {turn}턴에 5성향 수집 완료 → chat_done 발행")
                         self.cleanup(memberId)
@@ -61,7 +64,7 @@ class MonitorService:
                             support_q = self.prompt_generator.generate_support_reply(missing[0])
                             logger.info(f"[{memberId}] 보조 질문 내용: {support_q}")
                             cleaned = self.prompt_generator.clean_reply(support_q)
-                            self.kafka_producer.send_chat_response(memberId, cleaned)
+                            self.kafka_producer.send_chat_response(memberId, cleaned, timestamp)
                             logger.info(f"[{memberId}] 보조 질문 전송: {missing[0]}")
                         continue
 
@@ -70,7 +73,7 @@ class MonitorService:
                     if self.all_traits_present(memberId):
                         final_msg = "아쉽지만 대화는 여기까지에요."
                         cleaned = self.prompt_generator.clean_reply(final_msg)
-                        self.kafka_producer.send_chat_response(memberId, cleaned)
+                        self.kafka_producer.send_chat_response(memberId, cleaned, timestamp)
                         self.kafka_producer.send_done_signal(memberId)
                         logger.info(f"[{memberId}] (정상 종료) 20턴에 5성향 완료 → chat_done 발행")
                     else:
@@ -79,7 +82,7 @@ class MonitorService:
                         if missing:
                             direct_q = prompt_service.generate_direct_question(missing[0])
                             cleaned = self.prompt_generator.clean_reply(direct_q)
-                            self.kafka_producer.send_chat_response(memberId, cleaned)
+                            self.kafka_producer.send_chat_response(memberId, cleaned, timestamp)
                             logger.info(f"[{memberId}] 직접 설문 질문 전송: {missing[0]}")
                     self.cleanup(memberId)
 
