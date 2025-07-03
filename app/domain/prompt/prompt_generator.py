@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv('OPENAI_API_KEY')
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.WARNING)
 
 class PromptGenerator:
     def __init__(self):
@@ -58,6 +59,10 @@ class PromptGenerator:
             .pipe(self.llm)
             .pipe(StrOutputParser())
         )
+
+        logger.warning(f"[PromptGenerator] LLM 객체 생성됨 → {self.llm}")
+        logger.warning(f"[PromptGenerator] 호출 주소 → {getattr(self.llm, 'openai_api_base', '알 수 없음')}")
+
 
     def _build_messages(self, history):
         messages = [SystemMessage(content=self.few_shot_text)]

@@ -1,16 +1,9 @@
-# receive_test.py
-import json
-from kafka import KafkaConsumer
+import sys
+import os
+sys.path.append(os.path.abspath("."))
 
-consumer = KafkaConsumer(
-    "chat_output",
-    bootstrap_servers="localhost:9092",
-    value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-    group_id="test-cli-group",
-    auto_offset_reset="earliest",
-    enable_auto_commit=True
-)
+from prompt_generator import PromptGenerator
 
-print("📡 chat_output 메시지 수신 대기 중...")
-for msg in consumer:
-    print("📩 받은 메시지:", msg.value)
+pg = PromptGenerator()
+print("LLM 객체:", pg.llm)
+print("OpenAI 호출 URL:", getattr(pg.llm, "openai_api_base", "알 수 없음"))
